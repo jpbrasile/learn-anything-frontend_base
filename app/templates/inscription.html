@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnAnything - Enregistrement et Connexion</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url('https://raw.githubusercontent.com/jpbrasile/images/main/DALL%C2%B7E%202024-07-22%2010.08.41%20-%20A%20clean%20and%20modern%20design%20with%20vibrant%20illustrations%20of%20various%20activities%20such%20as%20reading%2C%20programming%2C%20music%2C%20and%20scientific%20experiments.%20The%20image%20.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 350px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        input {
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        input:focus {
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+            outline: none;
+        }
+
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #3a7bc8;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.4);
+        }
+
+        .toggle-btn {
+            background: none;
+            color: #4a90e2;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .feedback {
+            margin-top: 1rem;
+            color: green;
+        }
+
+        .google-btn {
+            background: white;
+            color: #333;
+            border: 2px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .google-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1rem;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="/mnt/data/image.png" alt="LearnAnything Logo" class="logo">
+        <h1 id="form-title">Rejoignez LearnAnything</h1>
+
+        <form id="registrationForm">
+            <input type="text" id="username" name="username" placeholder="Nom d'utilisateur" required>
+            <input type="email" id="email" name="email" placeholder="Email" required>
+            <input type="password" id="password" name="password" placeholder="Mot de passe" required>
+            <button type="submit">S'inscrire</button>
+        </form>
+
+        <form id="loginForm" style="display:none;">
+            <input type="email" id="login-email" name="email" placeholder="Email" required>
+            <input type="password" id="login-password" name="password" placeholder="Mot de passe" required>
+            <button type="submit">Se connecter</button>
+        </form>
+
+        <button id="googleSignIn" class="google-btn">
+            <img src="/mnt/data/image.png" alt="Google logo" width="20" height="20">
+            S'inscrire avec Google
+        </button>
+
+        <button class="toggle-btn" id="toggleToLogin">Déjà inscrit ? Connectez-vous</button>
+        <button class="toggle-btn" id="toggleToRegister" style="display:none;">Nouveau ici ? Inscrivez-vous</button>
+
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const userData = Object.fromEntries(formData.entries());
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('feedback').textContent = 'Inscription réussie! Vous pouvez maintenant vous connecter.';
+                    document.getElementById('registrationForm').reset();
+                    toggleForms();
+                } else {
+                    document.getElementById('feedback').textContent = 'Erreur lors de l\'inscription: ' + data.error;
+                }
+            })
+            .catch(error => console.error('Erreur:', error));
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const userData = Object.fromEntries(formData.entries());
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('feedback').textContent = 'Connexion réussie!';
+                    setTimeout(() => {
+                        window.location.href = '/preferences';
+                    }, 1000);
+                } else {
+                    document.getElementById('feedback').textContent = 'Erreur lors de la connexion: ' + data.error;
+                }
+            })
+            .catch(error => console.error('Erreur:', error));
+        });
+
+        document.getElementById('googleSignIn').addEventListener('click', function() {
+            console.log('Tentative de connexion avec Google');
+        });
+
+        document.getElementById('toggleToLogin').addEventListener('click', function() {
+            toggleForms();
+        });
+
+        document.getElementById('toggleToRegister').addEventListener('click', function() {
+            toggleForms();
+        });
+
+        function toggleForms() {
+            const registerForm = document.getElementById('registrationForm');
+            const loginForm = document.getElementById('loginForm');
+            const toggleToLogin = document.getElementById('toggleToLogin');
+            const toggleToRegister = document.getElementById('toggleToRegister');
+            const formTitle = document.getElementById('form-title');
+
+            if (registerForm.style.display === 'none') {
+                registerForm.style.display = 'block';
+                loginForm.style.display = 'none';
+                toggleToLogin.style.display = 'block';
+                toggleToRegister.style.display = 'none';
+                formTitle.textContent = 'Rejoignez LearnAnything';
+            } else {
+                registerForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                toggleToLogin.style.display = 'none';
+                toggleToRegister.style.display = 'block';
+                formTitle.textContent = 'Connectez-vous à LearnAnything';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}Programme de Mathématiques 5e avec Retour Bienveillant{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .tabs { display: flex; background-color: #f0f0f0; margin-bottom: 20px; }
+    .tab { padding: 10px 20px; cursor: pointer; border: 1px solid #ddd; border-bottom: none; }
+    .tab.active { background-color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .node { margin-left: 20px; display: flex; align-items: center; margin-bottom: 5px; }
+    .node-content { 
+        cursor: pointer; 
+        padding: 5px 10px; 
+        border-radius: 5px; 
+        flex-grow: 1; 
+        display: flex;
+        align-items: center;
+        transition: background-color 0.3s;
+    }
+    .node-content:hover { filter: brightness(90%); }
+    .leaf { font-weight: bold; }
+    .quiz { margin-top: 20px; padding: 10px; background-color: #e6f3ff; border-radius: 5px; }
+    .rating { 
+        width: 30px; 
+        height: 30px; 
+        border-radius: 50%; 
+        margin-left: 10px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 20px;
+        background-color: white;
+        border: 2px solid currentColor;
+    }
+    .expand-icon {
+        margin-right: 10px;
+        font-size: 12px;
+        width: 15px;
+        text-align: center;
+    }
+    .input-answer {
+        margin-top: 10px;
+    }
+    .input-answer input {
+        margin-right: 10px;
+        padding: 5px;
+    }
+    .input-answer button {
+        padding: 5px 10px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    .feedback {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #f0f0f0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tabs">
+    <div class="tab active" onclick="changeTab('course')">Course</div>
+    <div class="tab" onclick="changeTab('exercises')">Exercises</div>
+    <div class="tab" onclick="changeTab('profile')">Profile</div>
+    <div class="tab" onclick="changeTab('resources')">Resources</div>
+</div>
+
+
+
+<div id="course" class="tab-content active">
+    <h1>Learn Anything</h1>
+    <div id="tree"></div>
+    <div id="quiz"></div>
+    <button id="save-session" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Sauvegarder la session
+    </button>
+</div>
+
+
+<div id="exercises" class="tab-content">
+    <h2>Exercises</h2>
+    <p>Exercises content to be added.</p>
+</div>
+
+<div id="profile" class="tab-content">
+    <h2>Profile</h2>
+    <p>Profile content to be added.</p>
+</div>
+
+<div id="resources" class="tab-content">
+    <h2>Resources</h2>
+    <p>Resources content to be added.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let courseData;
+let correctAnswers = 0;
+let incorrectAnswers = 0;
+let scoreDirty = false;  // Flag to track if scores have changed
+
+const performanceEmojis = ['😐', '🙂', '😊', '😄', '😁', '🥳'];
+const difficultyLevels = [
+    { name: 'Découvreur', emoji: '🔭', colors: ['rgb(224,224,224)', 'rgb(206,220,226)', 'rgb(188,217,228)', 'rgb(171,213,231)', 'rgb(153,210,233)', 'rgb(135,206,235)'] },
+    { name: 'Explorateur', emoji: '🚀', colors: ['rgb(255,255,224)', 'rgb(255,232,179)', 'rgb(255,209,134)', 'rgb(255,186,90)', 'rgb(255,163,45)', 'rgb(255,140,0)'] },
+    { name: 'Vainqueur', emoji: '🌌', colors: ['rgb(224,224,224)', 'rgb(186,207,186)', 'rgb(148,190,148)', 'rgb(110,173,110)', 'rgb(72,156,72)', 'rgb(34,139,34)'] }
+];
+
+function updateScore() {
+    const scoreElement = document.getElementById('score');
+    if (!scoreElement) {
+        const div = document.createElement('div');
+        div.id = 'score';
+        div.style.marginTop = '20px';
+        div.innerHTML = `Correct: ${correctAnswers}, Incorrect: ${incorrectAnswers}`;
+        document.body.appendChild(div);
+    } else {
+        scoreElement.innerHTML = `Correct: ${correctAnswers}, Incorrect: ${incorrectAnswers}`;
+    }
+
+    // Send score update to server
+    fetch("{{ url_for('main.update_score', session_id=session_id) }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            correct: correctAnswers,
+            incorrect: incorrectAnswers
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Score updated successfully');
+        } else {
+            console.error('Failed to update score');
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+}
+
+
+function changeTab(tabName) {
+    const tabs = document.getElementsByClassName('tab');
+    const contents = document.getElementsByClassName('tab-content');
+    
+    for (let i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove('active');
+        contents[i].classList.remove('active');
+    }
+    
+    document.querySelector(`.tab:nth-child(${Array.from(tabs).findIndex(tab => tab.textContent.toLowerCase() === tabName) + 1})`).classList.add('active');
+    document.getElementById(tabName).classList.add('active');
+}
+
+function clearQuiz() {
+    document.getElementById('quiz').innerHTML = '';
+}
+
+function createTree(node, parent) {
+    const div = document.createElement('div');
+    div.className = 'node';
+    const content = document.createElement('div');
+    content.className = 'node-content' + (node.children ? '' : ' leaf');
+
+    const randomLevel = Math.floor(Math.random() * 3);
+    const randomPerformance = Math.floor(Math.random() * 6);
+    const backgroundColor = difficultyLevels[randomLevel].colors[randomPerformance];
+    
+    content.style.backgroundColor = backgroundColor;
+    content.style.color = randomPerformance > 3 ? 'white' : 'black';
+
+    const expandIcon = document.createElement('span');
+    expandIcon.className = 'expand-icon';
+    expandIcon.textContent = node.children ? '▶' : node.quiz ? '❓' : '•';
+    content.appendChild(expandIcon);
+
+    const label = document.createElement('span');
+    label.textContent = node.label;
+    content.appendChild(label);
+
+    div.appendChild(content);
+
+    const rating = document.createElement('div');
+    rating.className = 'rating';
+    rating.style.color = backgroundColor;
+    rating.textContent = performanceEmojis[randomPerformance];
+    rating.title = `${difficultyLevels[randomLevel].name} - Niveau ${randomPerformance + 1}`;
+    div.appendChild(rating);
+
+    if (node.children) {
+        const childrenDiv = document.createElement('div');
+        childrenDiv.style.display = 'none';
+        node.children.forEach(child => createTree(child, childrenDiv));
+        div.appendChild(childrenDiv);
+
+        content.addEventListener('click', () => {
+            childrenDiv.style.display = childrenDiv.style.display === 'none' ? 'block' : 'none';
+            expandIcon.textContent = childrenDiv.style.display === 'none' ? '▶' : '▼';
+            clearQuiz();
+        });
+    } else if (node.quiz) {
+        content.addEventListener('click', () => showQuiz(node.label, node.questions));
+    }
+
+    parent.appendChild(div);
+}
+
+function showQuiz(topic, questions) {
+    const quizDiv = document.getElementById('quiz');
+    if (questions) {
+        let html = `<div class="quiz"><h3>Questions sur ${topic} :</h3>`;
+        questions.forEach((q, index) => {
+            html += `<p><strong>${q.q}</strong></p>`;
+            if (q.type === "input") {
+                html += `
+                    <div class="input-answer">
+                        <input type="text" id="answer-${index}" placeholder="Votre réponse">
+                        <button onclick="checkAnswer(${index}, '${topic}', '${q.a}')">Vérifier</button>
+                    </div>
+                    <div id="feedback-${index}" class="feedback"></div>
+                `;
+            } else {
+                html += `<p>Réponse : ${q.a}</p>`;
+            }
+        });
+        html += '</div>';
+        quizDiv.innerHTML = html;
+    } else {
+        quizDiv.innerHTML = `<div class="quiz">Pas de questions disponibles pour ${topic}.</div>`;
+    }
+}
+
+function checkAnswer(index, topic, correctAnswer) {
+    const userAnswer = document.getElementById(`answer-${index}`).value.trim();
+    const feedbackElement = document.getElementById(`feedback-${index}`);
+    
+    if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+        feedbackElement.textContent = "Excellent travail ! Ta réponse est parfaite. Continue comme ça !";
+        feedbackElement.style.backgroundColor = "#e6ffe6";
+        correctAnswers++;
+    } else {
+        feedbackElement.textContent = `Bonne tentative ! La réponse correcte est "${correctAnswer}". L'astronomie est un domaine vaste avec beaucoup à apprendre !`;
+        feedbackElement.style.backgroundColor = "#fff0e6";
+        incorrectAnswers++;
+    }
+    updateScore();
+}
+
+function updateScore() {
+    const scoreElement = document.getElementById('score');
+    if (!scoreElement) {
+        const div = document.createElement('div');
+        div.id = 'score';
+        div.style.marginTop = '20px';
+        div.innerHTML = `Correct: ${correctAnswers}, Incorrect: ${incorrectAnswers}`;
+        document.body.appendChild(div);
+    } else {
+        scoreElement.innerHTML = `Correct: ${correctAnswers}, Incorrect: ${incorrectAnswers}`;
+    }
+}
+
+function loadCourseContent() {
+    fetch("{{ url_for('main.get_session_content', session_id=session_id) }}")
+        .then(response => response.json())
+        .then(data => {
+            courseData = data;
+            createTree(courseData, document.getElementById('tree'));
+        });
+}
+
+
+
+
+// ... (keep other functions as they are)
+
+function checkAnswer(index, topic, correctAnswer) {
+    const userAnswer = document.getElementById(`answer-${index}`).value.trim();
+    const feedbackElement = document.getElementById(`feedback-${index}`);
+    
+    if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
+        feedbackElement.textContent = "Excellent travail ! Ta réponse est parfaite. Continue comme ça !";
+        feedbackElement.style.backgroundColor = "#e6ffe6";
+        correctAnswers += 1;
+    } else {
+        feedbackElement.textContent = `Bonne tentative ! La réponse correcte est "${correctAnswer}". L'astronomie est un domaine vaste avec beaucoup à apprendre !`;
+        feedbackElement.style.backgroundColor = "#fff0e6";
+        incorrectAnswers += 1;
+    }
+    updateScore();
+    scoreDirty = true;  // Mark scores as changed
+}
+
+function updateScore() {
+    const scoreElement = document.getElementById('score');
+    if (!scoreElement) {
+        const div = document.createElement('div');
+        div.id = 'score';
+        div.style.marginTop = '20px';
+        document.body.appendChild(div);
+    }
+    scoreElement.innerHTML = `Correct: ${correctAnswers}, Incorrect: ${incorrectAnswers}`;
+}
+
+function saveSession() {
+    if (!scoreDirty) {
+        alert("Aucun changement à sauvegarder.");
+        return;
+    }
+
+    fetch("{{ url_for('main.update_score', session_id=session_id) }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            correct: correctAnswers,
+            incorrect: incorrectAnswers
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Session sauvegardée avec succès!');
+            scoreDirty = false;  // Reset the flag
+        } else {
+            alert('Erreur lors de la sauvegarde de la session.');
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('Erreur lors de la sauvegarde de la session.');
+    });
+}
+
+function loadCourseContent() {
+    fetch("{{ url_for('main.get_session_content', session_id=session_id) }}")
+        .then(response => response.json())
+        .then(data => {
+            courseData = data.course_data;
+            correctAnswers = data.correct_answers;
+            incorrectAnswers = data.incorrect_answers;
+            createTree(courseData, document.getElementById('tree'));
+            updateScore();
+        });
+}
+
+document.getElementById('save-session').addEventListener('click', saveSession);
+loadCourseContent();
+</script>
+{% endblock %}

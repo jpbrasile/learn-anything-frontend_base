@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnAnything - Préférences d'apprentissage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .preference-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+        }
+        
+        .preference-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.5);
+        }
+        
+        .fun-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a0aec0'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.5em 1.5em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .fun-button {
+            background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+            transition: all 0.3s ease;
+        }
+        
+        .fun-button:hover {
+            background: linear-gradient(45deg, #FF8E8E, #6EE7E7);
+            transform: scale(1.05);
+        }
+        
+        .fun-input {
+            transition: all 0.3s ease;
+        }
+        
+        .fun-input:focus {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="p-6 flex items-center justify-center">
+    <div class="preference-card p-8 w-full max-w-2xl">
+        <h1 class="text-3xl font-bold mb-6 text-center text-indigo-800">Personnalise ton aventure d'apprentissage ! 🚀</h1>
+        <form id="preferencesForm">
+            <div class="mb-6">
+                <label for="communicationStyle" class="block text-lg font-medium text-indigo-700 mb-2">Comment préfères-tu qu'on te parle ? 🗣️</label>
+                <select id="communicationStyle" name="communicationStyle" class="fun-select w-full p-3 border-2 border-indigo-300 rounded-xl text-indigo-700 focus:border-indigo-500 focus:ring focus:ring-indigo-200 fun-input">
+                    <option value="formal">Comme un prof 👨‍🏫</option>
+                    <option value="informal">Comme un pote 🤙</option>
+                    <option value="detailed">Avec plein de détails 🔍</option>
+                    <option value="concise">Court et précis ⚡</option>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label for="learningPace" class="block text-lg font-medium text-indigo-700 mb-2">À quelle vitesse veux-tu apprendre ? 🏃‍♂️</label>
+                <select id="learningPace" name="learningPace" class="fun-select w-full p-3 border-2 border-indigo-300 rounded-xl text-indigo-700 focus:border-indigo-500 focus:ring focus:ring-indigo-200 fun-input">
+                    <option value="slow">Tranquille, on a le temps 🐢</option>
+                    <option value="moderate">Un bon rythme 🚶‍♂️</option>
+                    <option value="fast">À fond les ballons ! 🚀</option>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label for="learningStyle" class="block text-lg font-medium text-indigo-700 mb-2">Comment tu apprends le mieux ? 🧠</label>
+                <select id="learningStyle" name="learningStyle" class="fun-select w-full p-3 border-2 border-indigo-300 rounded-xl text-indigo-700 focus:border-indigo-500 focus:ring focus:ring-indigo-200 fun-input">
+                    <option value="visual">Avec des images et des schémas 📊</option>
+                    <option value="auditory">En écoutant des explications 🎧</option>
+                    <option value="kinesthetic">En pratiquant, les mains dans le cambouis 🛠️</option>
+                </select>
+            </div>
+            <div class="mb-6">
+                <label for="customPreferences" class="block text-lg font-medium text-indigo-700 mb-2">Des trucs spéciaux à nous dire ? 🌈</label>
+                <textarea id="customPreferences" name="customPreferences" rows="3" class="w-full p-3 border-2 border-indigo-300 rounded-xl text-indigo-700 focus:border-indigo-500 focus:ring focus:ring-indigo-200 fun-input" placeholder="Dis-nous tout ce qui te passe par la tête !"></textarea>
+            </div>
+            <button type="submit" class="fun-button w-full text-white py-3 px-6 rounded-xl text-lg font-semibold shadow-lg">
+                C'est parti pour l'aventure ! 🎉
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('preferencesForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const preferences = Object.fromEntries(formData.entries());
+            console.log('Préférences cool de l\'utilisateur:', preferences);
+            // Ici, vous ajouteriez la logique pour envoyer les données au serveur
+            alert('Woohoo ! Tes préférences sont enregistrées. Prêt pour une aventure d\'apprentissage sur mesure ? 🚀');
+        });
+    </script>
+</body>
+</html>
