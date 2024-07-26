@@ -11,7 +11,11 @@ LearnAnything is an interactive learning platform that provides personalized cou
 - Navigate to the local repository you created (learn-anything).
 
 ```
-git remote add origin https://github.com/jpbrasile/learn-anything.git
+git init
+git add .
+git commit -m "Initial commit"
+git remote set-url origin https://github.com/jpbrasile/learn-anything.git
+#ou git remote add origin https://github.com/jpbrasile/learn-anything.git si le repository vide n'a pas été créé sur GitHub
 git branch -M main
 git push -u origin main
 ``` 
@@ -34,7 +38,8 @@ Create a `.env` file in the root directory and add the following:
 SECRET_KEY=your-secret-key
 DATABASE_URL=sqlite:///app.db
 
-5. Initialize the database:
+5. Initialize the database: (will create and populate migrations)
+$env:FLASK_APP = "run.py"
 flask db init
 flask db migrate
 flask db upgrade
@@ -49,17 +54,55 @@ python run.py
 
 ## Project Structure
 
-- `app/`: Contains the main application code
-- `__init__.py`: Initializes the Flask application
-- `models.py`: Defines the database models
-- `routes.py`: Contains the application routes
-- `static/`: Static files (CSS, JS, images)
-- `templates/`: HTML templates
-- `migrations/`: Database migration files
-- `tests/`: Test files
-- `config.py`: Configuration settings
-- `populate_db.py`: Script to populate the database with sample data
-- `run.py`: Script to run the application
+Project Structure:
+
+app/
+
+init.py: Flask app initialization, blueprint registration
+models.py: Database models (User, Session, UserPreferences)
+routes.py: API endpoints and view functions
+static/: CSS and images
+templates/: HTML templates
+
+
+migrations/: Database migration files
+tests/: Unit tests
+config.py: Configuration classes (Config, TestConfig)
+run.py: Script to run the application
+requirements.txt: Project dependencies
+
+
+Key Files and Their Roles:
+
+main.py: Renamed to run.py, creates and runs the Flask app
+models.py: Defines database models using SQLAlchemy
+routes.py: Defines API endpoints and view functions
+config.py: Contains configuration classes for different environments
+init.py: Initializes Flask app, extensions, and registers blueprints
+test_routes.py: Contains unit tests for routes
+
+
+Authentication Implementation:
+
+User registration and login routes in routes.py
+Password hashing in User model
+Flask-Login for session management
+
+
+Frontend:
+
+inscription.html: Combined registration and login page
+preferences.html: User preferences page
+interactive_session.html: Learning session page
+Base template with Tailwind CSS for styling
+
+
+Testing:
+
+TestConfig class in config.py for test environment
+test_routes.py for route testing
+
+
 
 ## Features
 

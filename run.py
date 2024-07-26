@@ -1,3 +1,6 @@
+# import sys
+# print("Current PYTHONPATH:", sys.path)
+# print("Current file location:", __file__)
 from app import create_app
 
 app = create_app()

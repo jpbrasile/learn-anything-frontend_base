@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -121,7 +123,7 @@
 </head>
 <body>
     <div class="container">
-        <img src="/mnt/data/image.png" alt="LearnAnything Logo" class="logo">
+        <img src=" https://raw.githubusercontent.com/jpbrasile/images/main/image.png" alt="LearnAnything Logo" class="logo">
         <h1 id="form-title">Rejoignez LearnAnything</h1>
 
         <form id="registrationForm">
@@ -138,7 +140,7 @@
         </form>
 
         <button id="googleSignIn" class="google-btn">
-            <img src="/mnt/data/image.png" alt="Google logo" width="20" height="20">
+            <img src="https://raw.githubusercontent.com/jpbrasile/images/main/Capture%20d'%C3%A9cran%202024-07-25%20150347.png" alt="Google logo" width="20" height="20">
             S'inscrire avec Google
         </button>
 
@@ -153,7 +155,7 @@
             e.preventDefault();
             const formData = new FormData(this);
             const userData = Object.fromEntries(formData.entries());
-            fetch('/register', {
+            fetch('/auth/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -173,11 +175,13 @@
             .catch(error => console.error('Erreur:', error));
         });
 
+
+
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
             const userData = Object.fromEntries(formData.entries());
-            fetch('/login', {
+            fetch('/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -187,16 +191,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    document.getElementById('feedback').textContent = 'Connexion réussie!';
-                    setTimeout(() => {
-                        window.location.href = '/preferences';
-                    }, 1000);
+                    window.location.href = data.redirect;
                 } else {
                     document.getElementById('feedback').textContent = 'Erreur lors de la connexion: ' + data.error;
                 }
             })
             .catch(error => console.error('Erreur:', error));
         });
+        
 
         document.getElementById('googleSignIn').addEventListener('click', function() {
             console.log('Tentative de connexion avec Google');

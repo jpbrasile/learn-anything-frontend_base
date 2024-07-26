@@ -1,9 +1,11 @@
-from app import db, login_manager
-from flask_login import UserMixin
+
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from app.extensions import db, login_manager
+from flask_login import UserMixin
 
 class User(UserMixin, db.Model):
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
@@ -18,13 +20,18 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 class Session(db.Model):
+
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    completed = db.Column(db.Boolean, default=False)
+    correct_answers = db.Column(db.Integer, default=0)
+    total_answers = db.Column(db.Integer, default=0)
+    #user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     start_time = db.Column(db.DateTime, default=datetime.utcnow)
     end_time = db.Column(db.DateTime)
     course_data = db.Column(db.JSON)
     user_progress = db.Column(db.JSON)
-    correct_answers = db.Column(db.Integer, default=0)
+    #correct_answers = db.Column(db.Integer, default=0)
     incorrect_answers = db.Column(db.Integer, default=0)
 
 class UserPreferences(db.Model):

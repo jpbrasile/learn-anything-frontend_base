@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}LearnAnything - Session Interactive{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-4">Session Interactive</h1>
+
+    <div id="tree" class="mb-8"></div>
+    <div id="quiz" class="bg-white p-6 rounded-lg shadow-md"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sessionId = {{ session.id }};
+    const courseData = {{ course_data | tojson | safe }};
+
+    const performanceEmojis = ['😐', '🙂', '😊', '😄', '😁', '🥳'];
+    const difficultyLevels = [
+        { name: 'Découvreur', emoji: '🐣', colors: ['#E0E0E0', '#CEDCE2', '#BCD9E4', '#ABD5E7', '#99D2E9', '#87CEEB'] },
+        { name: 'Explorateur', emoji: '🔨', colors: ['#FFFFE0', '#FFE8B3', '#FFD186', '#FFBA5A', '#FFA32D', '#FF8C00'] },
+        { name: 'Vainqueur', emoji: '🎓', colors: ['#E0E0E0', '#BACFBA', '#94BE94', '#6EAD6E', '#489C48', '#228B22'] }
+    ];
+
+    function createTree(node, parent) {
+        const div = document.createElement('div');
+        div.className = 'node mb-2';
+        const content = document.createElement('div');
+        content.className = 'node-content cursor-pointer p-2 rounded flex items-center ' + (node.children ? '' : 'font-bold');
+
+        const randomLevel = Math.floor(Math.random() * 3);
+        const randomPerformance = Math.floor(Math.random() * 6);
+        const backgroundColor = difficultyLevels[randomLevel].colors[randomPerformance];
+        
+        content.style.backgroundColor = backgroundColor;
+        content.style.color = randomPerformance > 3 ? 'white' : 'black';
+
+        const expandIcon = document.createElement('span');
+        expandIcon.className = 'expand-icon mr-2 text-sm w-4 text-center';
+        expandIcon.textContent = node.children ? '▶' : node.quiz ? '❓' : '•';
+        content.appendChild(expandIcon);
+
+        const label = document.createElement('span');
+        label.textContent = node.label;
+        content.appendChild(label);
+
+        div.appendChild(content);
+
+        const rating = document.createElement('div');
+        rating.className = 'rating ml-2 w-8 h-8 rounded-full flex items-center justify-center text-xl';
+        rating.style.backgroundColor = 'white';
+        rating.style.border = `2px solid ${backgroundColor}`;
+        rating.style.color = backgroundColor;
+        rating.textContent = performanceEmojis[randomPerformance];
+        rating.title = `${difficultyLevels[randomLevel].name} - Niveau ${randomPerformance + 1}`;
+        div.appendChild(rating);
+
+        if (node.children) {
+            const childrenDiv = document.createElement('div');
+            childrenDiv.className = 'ml-6';
+            childrenDiv.style.display = 'none';
+            node.children.forEach(child => createTree(child, childrenDiv));
+            div.appendChild(childrenDiv);
+
+            content.addEventListener('click', () => {
+                childrenDiv.style.display = childrenDiv.style.display === 'none' ? 'block' : 'none';
+                expandIcon.textContent = childrenDiv.style.display === 'none' ? '▶' : '▼';
+                clearQuiz();
+            });
+        } else if (node.quiz) {
+            content.addEventListener('click', () => showQuiz(node));
+        }
+
+        parent.appendChild(div);
+    }
+
+    function clearQuiz() {
+        document.getElementById('quiz').innerHTML = '';
+    }
+
+    function showQuiz(node) {
+        const quizDiv = document.getElementById('quiz');
+        quizDiv.innerHTML = `
+            <h3 class="text-xl font-semibold mb-4">Quiz sur ${node.label}</h3>
+            <div id="question-container"></div>
+        `;
+
+        const questionContainer = document.getElementById('question-container');
+        node.questions.forEach((question, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'mb-6';
+            questionDiv.innerHTML = `
+                <p class="font-semibold mb-2">${question.q}</p>
+                <div class="flex items-center">
+                    <input type="text" id="answer-${index}" class="border rounded p-2 mr-2" placeholder="Votre réponse">
+                    <button onclick="checkAnswer(${index})" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                        Vérifier
+                    </button>
+                </div>
+                <div id="feedback-${index}" class="mt-2 p-3 rounded hidden"></div>
+            `;
+            questionContainer.appendChild(questionDiv);
+        });
+
+        window.checkAnswer = function(index) {
+            const userAnswer = document.getElementById(`answer-${index}`).value.trim().toLowerCase();
+            const correctAnswer = node.questions[index].a.toLowerCase();
+            const feedbackDiv = document.getElementById(`feedback-${index}`);
+
+            if (userAnswer === correctAnswer) {
+                feedbackDiv.textContent = `Excellent travail ! "${node.questions[index].a}" est la bonne réponse. Tu as bien compris ce concept !`;
+                feedbackDiv.className = 'mt-2 p-3 rounded bg-green-100 text-green-700';
+            } else {
+                feedbackDiv.textContent = `Bonne tentative ! La réponse correcte est "${node.questions[index].a}". N'hésite pas à revoir cette partie du cours et à réessayer !`;
+                feedbackDiv.className = 'mt-2 p-3 rounded bg-yellow-100 text-yellow-700';
+            }
+
+            feedbackDiv.classList.remove('hidden');
+        };
+    }
+
+    createTree(courseData, document.getElementById('tree'));
+
+    console.log("Debug: JavaScript loaded for session", sessionId);
+});
+</script>
+{% endblock %}

@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-indigo-700 mb-8">Bienvenue, {{ current_user.username }} !</h1>
+    <h1 class="text-3xl font-bold text-indigo-700 mb-8">Bienvenue, {{ name }} !</h1>
 
     <div class="grid md:grid-cols-2 gap-8">
         <!-- User Progress Overview -->
@@ -12,18 +12,17 @@
             <h2 class="text-2xl font-semibold text-indigo-600 mb-4">Votre Progression</h2>
             <div class="space-y-4">
                 <div>
-                    <p class="text-gray-700">Sessions complétées : <span class="font-bold">{{ completed_sessions }}</span></p>
+                    <p class="text-gray-700">Sessions complétées : <span class="font-bold">{{ completed_sessions }} / {{ total_sessions }}</span></p>
                     <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4 dark:bg-gray-700">
-                        <div class="bg-indigo-600 h-2.5 rounded-full" style="width: {{ (completed_sessions / total_sessions) * 100 }}%"></div>
+                        <div class="bg-indigo-600 h-2.5 rounded-full" style="width: {{ completion_percentage }}%"></div>
                     </div>
                 </div>
                 <div>
-                    <p class="text-gray-700">Réponses correctes : <span class="font-bold">{{ correct_answers }}</span></p>
+                    <p class="text-gray-700">Réponses correctes : <span class="font-bold">{{ correct_answers }} / {{ total_answers }}</span></p>
                     <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4 dark:bg-gray-700">
-                        <div class="bg-green-600 h-2.5 rounded-full" style="width: {{ (correct_answers / total_answers) * 100 }}%"></div>
+                        <div id="progress-bar" class="bg-green-600 h-2.5 rounded-full" style="width: 0%"></div>
                     </div>
                 </div>
-                <a href="#" class="text-indigo-600 hover:text-indigo-800 font-semibold">Voir les statistiques détaillées</a>
             </div>
         </div>
 
@@ -33,7 +32,7 @@
             <ul class="space-y-2">
                 {% for session in active_sessions %}
                 <li class="flex justify-between items-center">
-                    <span class="text-gray-700">{{ session.course_name }}</span>
+                    <span class="text-gray-700">{{ session.course_data.get('name', 'Cours sans nom') }}</span>
                     <a href="{{ url_for('main.interactive_session', session_id=session.id) }}" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded">
                         Continuer
                     </a>
@@ -46,30 +45,6 @@
         </div>
     </div>
 
-    <!-- Quick Access Sections -->
-    <div class="grid md:grid-cols-3 gap-8 mt-8">
-        <!-- Preferences -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-semibold text-indigo-600 mb-2">Préférences d'Apprentissage</h3>
-            <p class="text-gray-700 mb-4">Personnalisez votre expérience d'apprentissage.</p>
-            <a href="{{ url_for('main.preferences') }}" class="text-indigo-600 hover:text-indigo-800 font-semibold">Modifier les préférences</a>
-        </div>
-
-        <!-- Course Catalog -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-semibold text-indigo-600 mb-2">Catalogue de Cours</h3>
-            <p class="text-gray-700 mb-4">Explorez notre vaste sélection de cours.</p>
-            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-semibold">Parcourir les cours</a>
-        </div>
-
-        <!-- Community -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-semibold text-indigo-600 mb-2">Communauté</h3>
-            <p class="text-gray-700 mb-4">Connectez-vous avec d'autres apprenants.</p>
-            <a href="#" class="text-indigo-600 hover:text-indigo-800 font-semibold">Rejoindre les forums</a>
-        </div>
-    </div>
-
     <!-- Recent Activity -->
     <div class="mt-8">
         <h2 class="text-2xl font-semibold text-indigo-600 mb-4">Activité Récente</h2>
@@ -77,12 +52,37 @@
             <ul class="space-y-4">
                 {% for activity in recent_activities %}
                 <li class="flex items-center">
-                    <span class="w-20 text-sm text-gray-500">{{ activity.date.strftime('%d/%m/%Y') }}</span>
-                    <span class="flex-grow text-gray-700">{{ activity.description }}</span>
+                    <span class="w-20 text-sm text-gray-500">{{ activity.start_time.strftime('%d/%m/%Y') }}</span>
+                    <span class="flex-grow text-gray-700">Session: {{ activity.course_data.get('name', 'Cours sans nom') }}</span>
                 </li>
                 {% endfor %}
             </ul>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updateProgressBar(correctAnswers, totalAnswers) {
+        const progressBar = document.getElementById('progress-bar');
+        if (progressBar) {
+            const percentage = totalAnswers > 0 ? (correctAnswers / totalAnswers * 100) : 0;
+            progressBar.style.width = percentage + '%';
+        }
+    }
+
+    function fetchProgress() {
+        fetch('/api/progress')
+            .then(response => response.json())
+            .then(data => {
+                updateProgressBar(data.correct_answers, data.total_answers);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    fetchProgress();
+});
+</script>
 {% endblock %}
